@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Ethics Interactive Exam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .en-text {
+            font-family: 'Inter', sans-serif;
+            direction: ltr;
+            text-align: left;
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(4px);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Header -->
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30">
+                    🛡️
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">اختبار أخلاقيات المهنة التفاعلي</h1>
+                    <p class="text-xs text-slate-400">Professional Ethics Exam • 60 Questions</p>
+                </div>
+            </div>
+
+            <!-- Stats & Controls -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Mode Switch -->
+                <div class="bg-slate-800 p-1 rounded-xl flex items-center text-xs font-semibold border border-slate-700">
+                    <button id="modePracticeBtn" onclick="setMode('practice')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition">
+                        تصحيح فوري ⚡
+                    </button>
+                    <button id="modeExamBtn" onclick="setMode('exam')" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+                        وضع الامتحان 📝
+                    </button>
+                </div>
+
+                <!-- View Switch -->
+                <div class="bg-slate-800 p-1 rounded-xl flex items-center text-xs font-semibold border border-slate-700">
+                    <button id="viewSingleBtn" onclick="setView('single')" class="px-3 py-1.5 rounded-lg bg-slate-700 text-white transition">
+                        سؤال بسؤال 📇
+                    </button>
+                    <button id="viewListBtn" onclick="setView('list')" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+                        الورقة كاملة 📜
+                    </button>
+                </div>
+
+                <!-- Score Pill -->
+                <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span class="text-emerald-400">✔ <span id="correctCount">0</span></span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-rose-400">✖ <span id="wrongCount">0</span></span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-indigo-400">المتبقي: <span id="remainingCount">60</span></span>
+                </div>
+
+                <button onclick="resetQuiz()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                    إعادة تعيين 🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1.5">
+            <div id="progressBar" class="bg-gradient-to-l from-indigo-500 to-emerald-400 h-1.5 transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Sidebar: Question Map & Filters -->
+        <aside class="lg:col-span-4 xl:col-span-3 space-y-4 order-2 lg:order-1">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sticky top-24">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-bold text-sm text-slate-200">خريطة الأسئلة</h2>
+                    <span id="filterCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">60 سؤال</span>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="grid grid-cols-2 gap-1.5 mb-4 text-xs font-semibold">
+                    <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-indigo-600 text-white py-1.5 px-2 rounded-lg transition">الكل (60)</button>
+                    <button onclick="setFilter('mcq')" id="filter-mcq" class="filter-btn bg-slate-800 text-slate-400 hover:text-white py-1.5 px-2 rounded-lg transition">الاختياري (1-40)</button>
+                    <button onclick="setFilter('tf')" id="filter-tf" class="filter-btn bg-slate-800 text-slate-400 hover:text-white py-1.5 px-2 rounded-lg transition">صح وخطأ (41-60)</button>
+                    <button onclick="setFilter('wrong')" id="filter-wrong" class="filter-btn bg-slate-800 text-rose-400 hover:bg-slate-700 py-1.5 px-2 rounded-lg transition">أخطائي ⚠️</button>
+                </div>
+
+                <!-- Grid of numbers -->
+                <div id="questionGrid" class="grid grid-cols-6 sm:grid-cols-10 lg:grid-cols-5 gap-2 max-h-72 lg:max-h-96 overflow-y-auto p-1">
+                    <!-- Generated by JS -->
+                </div>
+
+                <!-- Legend -->
+                <div class="mt-4 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> إجابة صحيحة</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span> إجابة خاطئة</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-indigo-500 inline-block"></span> تم الاختيار</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-slate-800 border border-slate-700 inline-block"></span> لم يُحل بعد</div>
+                </div>
+
+                <!-- Submit Exam Button (Only in Exam Mode) -->
+                <div id="examSubmitContainer" class="mt-4 pt-3 border-t border-slate-800 hidden">
+                    <button onclick="finishExam()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                        تسليم الامتحان وإظهار النتيجة 🎓
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Question Area -->
+        <section class="lg:col-span-8 xl:col-span-9 order-1 lg:order-2">
+            <!-- Single Card View -->
+            <div id="singleViewContainer" class="space-y-4">
+                <!-- Rendered by JS -->
+            </div>
+
+            <!-- Full List View -->
+            <div id="listViewContainer" class="space-y-6 hidden">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+            <div id="modalEmoji" class="text-6xl">🎉</div>
+            <h3 class="text-2xl font-extrabold text-white">نتيجة الاختبار</h3>
+            <p id="modalMessage" class="text-slate-400 text-sm"></p>
+            
+            <div class="bg-slate-800/80 rounded-2xl p-4 grid grid-cols-3 gap-2 border border-slate-700">
+                <div>
+                    <div class="text-xs text-slate-400">النسبة</div>
+                    <div id="modalPercent" class="text-2xl font-black text-indigo-400">0%</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">الصحيحة</div>
+                    <div id="modalCorrect" class="text-2xl font-black text-emerald-400">0</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">الخاطئة</div>
+                    <div id="modalWrong" class="text-2xl font-black text-rose-400">0</div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeModalAndReview()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition">
+                    مراجعة الإجابات 🔍
+                </button>
+                <button onclick="closeModalAndReset()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-xl transition">
+                    إعادة المحاولة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionsData = [
+            // Part 1: MCQ (1-40)
+            {
+                id: 1,
+                type: 'mcq',
+                q: "The one security measure that can NOT be achieved with private key cryptography is",
+                options: ["Authentication", "Confidentiality", "Non-repudiation", "None"],
+                ans: 2,
+                exp: "التشفير المتماثل (Private/Symmetric Key) يستخدم نفس المفتاح للطرفين، وبالتالي لا يمكنه ضمان عدم الإنكار (Non-repudiation) لأن أي طرف يملك المفتاح يمكنه ادعاء أن الطرف الآخر هو من أرسل الرسالة."
+            },
+            {
+                id: 2,
+                type: 'mcq',
+                q: "Symmetric Cryptography is also known as",
+                options: ["Public key cryptography", "Private Key Cryptography", "Hashing", "None"],
+                ans: 1,
+                exp: "التشفير المتماثل (Symmetric Cryptography) يُعرف أيضاً باسم تشفير المفتاح الخاص أو السري (Private Key Cryptography)."
+            },
+            {
+                id: 3,
+                type: 'mcq',
+                q: "Conducting a search on the web about a potential target for hacking is considered part of which of the following hacking phases?",
+                options: ["Foot Printing", "Scanning", "Enumeration", "None"],
+                ans: 0,
+                exp: "البحث على الويب وجمع المعلومات الأولية عن الهدف يُعد جزءاً من مرحلة الاستطلاع وجمع المعلومات (Footprinting)."
+            },
+            {
+                id: 4,
+                type: 'mcq',
+                q: "When plain text is converted to unreadable format, it is termed as",
+                options: ["Rotten text", "Raw text", "Cipher-text", "Ciphen-text"],
+                ans: 2,
+                exp: "النص العادي (Plain text) بعد تشفيره وتحويله إلى صيغة غير مقروءة يُسمى النص المشفر (Cipher-text)."
+            },
+            {
+                id: 5,
+                type: 'mcq',
+                q: "Which of the following is not a primary objective of cryptography?",
+                options: ["Confidentiality", "Data Redundancy", "Integrity", "Authentication"],
+                ans: 1,
+                exp: "تكرار البيانات (Data Redundancy) ليس من أهداف التشفير، بينما السرية والسلامة والمصادقة هي أهداف أساسية."
+            },
+            {
+                id: 6,
+                type: 'mcq',
+                q: "What type of program exists primarily to propagate and spread itself to other systems and can do so without interaction from users?",
+                options: ["Virus", "Trojan horse", "Worm", "Logic bomb"],
+                ans: 2,
+                exp: "الديدان (Worms) تنتشر تلقائياً عبر الشبكات إلى الأنظمة الأخرى دون الحاجة لتدخل المستخدم، على عكس الفيروس الذي يحتاج لتشغيل مضيف."
+            },
+            {
+                id: 7,
+                type: 'mcq',
+                q: "In ____________, 2 different keys are implemented for encrypting as well as decrypting that information.",
+                options: ["Symmetric Key Encryption", "Asymmetric Key Encryption", "Hash-based Key Encryption", "None"],
+                ans: 1,
+                exp: "في التشفير غير المتماثل (Asymmetric Key Encryption) يتم استخدام مفتاحين مختلفين: مفتاح عام للتشفير ومفتاح خاص لفك التشفير."
+            },
+            {
+                id: 8,
+                type: 'mcq',
+                q: "____________ is a component of the reconnaissance stage that is used to gather possible information for a target computer system or network.",
+                options: ["Fingerprinting", "3D printing", "Footprinting", "Data printing"],
+                ans: 2,
+                exp: "عملية Footprinting هي المكون الأساسي لمرحلة الاستطلاع (Reconnaissance) لجمع كل المعلومات الممكنة عن النظام المستهدف."
+            },
+            {
+                id: 9,
+                type: 'mcq',
+                q: "Which type of hacker represents the highest risk to your network?",
+                options: ["Black hat hackers", "Gray hat hackers", "White hat hackers", "Script kiddies"],
+                ans: 0,
+                exp: "قراصنة القبعة السوداء (Black hat hackers) يمتلكون مهارات عالية ودوافع خبيثة أو إجرامية، لذا يمثلون الخطر الأكبر."
+            },
+            {
+                id: 10,
+                type: 'mcq',
+                q: "Hackers who are typically characterized by having a code of ethics that says essentially, they will cause no harm are",
+                options: ["Script kiddies", "White hackers", "Grey hat hackers", "Suicide hackers"],
+                ans: 1,
+                exp: "الهاكرز الأخلاقيون (White hat hackers) يلتزمون بميثاق أخلاقي ينص على عدم إلحاق أي ضرر بالأنظمة."
+            },
+            {
+                id: 11,
+                type: 'mcq',
+                q: "Pings and Ping Sweeps, in which active hosts are identified, is conducted in which of the following hacking phases?",
+                options: ["Foot Printing", "Scanning", "Enumeration", "None"],
+                ans: 1,
+                exp: "إرسال Ping و Ping Sweeps لاكتشاف الأجهزة النشطة على الشبكة يتم في مرحلة الفحص (Scanning)."
+            },
+            {
+                id: 12,
+                type: 'mcq',
+                q: "To provide nonrepudiation for email, which algorithm would you choose to implement?",
+                options: ["Asymmetric Encryption Algorithms", "Symmetric Encryption Algorithm", "Hashing function", "None"],
+                ans: 0,
+                exp: "خوارزميات التشفير غير المتماثل (Asymmetric Encryption) توفر خاصية عدم الإنكار (Non-repudiation) من خلال التوقيعات الرقمية بالمفتاح الخاص."
+            },
+            {
+                id: 13,
+                type: 'mcq',
+                q: "Authentication can easily be achieved through",
+                options: ["Symmetric Cryptography", "Asymmetric Cryptography", "Both", "None"],
+                ans: 1,
+                exp: "المصادقة (Authentication) وإثبات الهوية يتحققان بسهولة وبشكل مباشر عبر التشفير غير المتماثل (Asymmetric Cryptography) كما هو مؤكد أيضاً في السؤال 34."
+            },
+            {
+                id: 14,
+                type: 'mcq',
+                q: "What phase comes after footprinting?",
+                options: ["Foot Printing", "Scanning", "Enumeration", "None"],
+                ans: 1,
+                exp: "ترتيب مراحل الاختراق: 1. Footprinting ثم 2. Scanning ثم 3. Enumeration."
+            },
+            {
+                id: 15,
+                type: 'mcq',
+                q: "Asymmetric Cryptography is also known as",
+                options: ["Public key cryptography", "Private Key cryptography", "Hashing", "None"],
+                ans: 0,
+                exp: "التشفير غير المتماثل يُعرف أيضاً باسم تشفير المفتاح العام (Public key cryptography)."
+            },
+            {
+                id: 16,
+                type: 'mcq',
+                q: "Which statement(s) defines malware most accurately?",
+                options: ["Malware is a form of virus.", "Trojans are malware.", "Malware covers all malicious software.", "Malware only covers spyware."],
+                ans: 2,
+                exp: "مصطلح Malware (البرمجيات الخبيثة) هو المظلة الشاملة التي تغطي كافة أنواع البرامج الضارة (فيروسات، ديدان، تروجان، تجسس...)."
+            },
+            {
+                id: 17,
+                type: 'mcq',
+                q: "What is the ethics behind training how to hack a system?",
+                options: [
+                    "To think like hackers and know how to defend such attacks",
+                    "To hack a system without permission",
+                    "To hack a network that is vulnerable",
+                    "To corrupt software or service using malware"
+                ],
+                ans: 0,
+                exp: "الهدف الأخلاقي من تعلم الاختراق هو التفكير بنفس عقلية المهاجمين لمعرفة كيفية الدفاع عن الأنظمة وحمايتها."
+            },
+            {
+                id: 18,
+                type: 'mcq',
+                q: "____________ has now evolved to be one of the most popular automated tools for unethical hacking.",
+                options: ["Automated apps", "Database software", "Malware", "Antiviruses"],
+                ans: 2,
+                exp: "البرمجيات الخبيثة (Malware) تطورت لتصبح من أشهر الأدوات الآلية المستخدمة في الاختراق غير الأخلاقي."
+            },
+            {
+                id: 19,
+                type: 'mcq',
+                q: "____________ is the process or mechanism used for converting ordinary plain text into garbled, non-human-readable text and vice-versa.",
+                options: ["Malware Analysis", "Exploit writing", "Reverse engineering", "Cryptography"],
+                ans: 3,
+                exp: "علم التشفير (Cryptography) هو الآلية المستخدمة لتحويل النص العادي إلى نص غير مقروء والعكس."
+            },
+            {
+                id: 20,
+                type: 'mcq',
+                q: "Hackers with limited or no training and only use basic techniques are",
+                options: ["Script kiddies", "White hackers", "Grey hat hackers", "None"],
+                ans: 0,
+                exp: "المبتدئون الذين يعتمدون على أدوات وسكربتات جاهزة دون خبرة برمجية حقيقية يُطلق عليهم Script kiddies."
+            },
+            {
+                id: 21,
+                type: 'mcq',
+                q: "A company collects user data without informing users but claims it is for improving services. Which ethical issue is MOST violated?",
+                options: ["Accountability", "Privacy", "Integrity", "Availability"],
+                ans: 1,
+                exp: "جمع بيانات المستخدمين دون علمهم أو موافقتهم يُعد انتهاكاً مباشراً للخصوصية (Privacy)."
+            },
+            {
+                id: 22,
+                type: 'mcq',
+                q: "An employee accesses confidential patient records without authorization but does not modify them. This is primarily a violation of:",
+                options: ["Integrity", "Non-repudiation", "Availability", "Privacy"],
+                ans: 3,
+                exp: "الاطلاع غير المصرح به على سجلات المرضى السرية دون تعديلها يُعد انتهاكاً لخصوصية المرضى (Privacy) والسرية."
+            },
+            {
+                id: 23,
+                type: 'mcq',
+                q: "A developer copies code from an online source without citation and integrates it into a commercial system. This action violates:",
+                options: ["Confidentiality", "Intellectual property rights", "Authentication", "Availability"],
+                ans: 1,
+                exp: "نسخ الكود واستخدامه تجارياً دون إذن أو إشارة للمصدر ينتهك حقوق الملكية الفكرية (Intellectual property rights)."
+            },
+            {
+                id: 24,
+                type: 'mcq',
+                q: "A company follows all legal regulations but still exposes users to unfair data usage practices. This highlights the difference between:",
+                options: ["Ethics and law", "Ethics and security", "Security and privacy", "Policy and standards"],
+                ans: 0,
+                exp: "قد يكون الفعل قانونياً ولكنه غير أخلاقي؛ وهذا يوضح الفرق بين الأخلاق والقانون (Ethics and law)."
+            },
+            {
+                id: 25,
+                type: 'mcq',
+                q: "What is the primary purpose of intellectual property rights?",
+                options: ["Limit software usage", "Improve software efficiency", "Protect the ownership of creative work", "Prevent hacking"],
+                ans: 2,
+                exp: "الهدف الأساسي من حقوق الملكية الفكرية هو حماية ملكية الأعمال الإبداعية والابتكارية."
+            },
+            {
+                id: 26,
+                type: 'mcq',
+                q: "A hacker breaks into a system to expose corruption but does not steal or damage data. This behavior is MOST associated with:",
+                options: ["Black-hat hacking", "White-hat hacking", "Gray-hat hacking", "Suicide hacking"],
+                ans: 2,
+                exp: "الاختراق بدون إذن (غير قانوني) ولكن بنية حسنة أو لكشف فساد دون تدمير البيانات يرتبط بـ Gray-hat hacking."
+            },
+            {
+                id: 27,
+                type: 'mcq',
+                q: "Which type of hacker may use their skills for benign and malicious goals simultaneously?",
+                options: ["White hat", "Gray hat", "Black hat", "Suicide hackers"],
+                ans: 1,
+                exp: "أصحاب القبعة الرمادية (Gray hat) يجمعون بين الممارسات الحسنة وغير القانونية في آن واحد."
+            },
+            {
+                id: 28,
+                type: 'mcq',
+                q: "What is the term for an attack where multiple hacking techniques are used in sequence?",
+                options: ["Brute-force attack", "Social engineering", "Daisy chaining", "Hashing"],
+                ans: 2,
+                exp: "مصطلح Daisy chaining يشير إلى تنفيذ سلسلة متتابعة من الهجمات أو اختراق نظام لاستخدامه كنقطة انطلاق لاختراق نظام آخر."
+            },
+            {
+                id: 29,
+                type: 'mcq',
+                q: "What is the first phase in an ethical hacking process?",
+                options: ["Enumeration", "Footprinting", "Covering tracks", "Exploitation"],
+                ans: 1,
+                exp: "أول مرحلة في عملية الاختراق الأخلاقي هي جمع المعلومات (Footprinting / Reconnaissance)."
+            },
+            {
+                id: 30,
+                type: 'mcq',
+                q: "A security analyst identifies a system as highly attractive to attackers due to valuable data and weak controls. This relates to:",
+                options: ["Attack surface", "Hack value", "Threat modeling", "Vulnerability scanning"],
+                ans: 1,
+                exp: "مصطلح Hack value يعبر عن مدى جاذبية الهدف أو القيمة المتوقعة التي يجنيها المهاجم من اختراق النظام."
+            },
+            {
+                id: 31,
+                type: 'mcq',
+                q: "TOE stands for",
+                options: ["Time of Evaluation", "Target of Evaluation", "Type of Evaluation", "Term of Evaluation"],
+                ans: 1,
+                exp: "اختصار TOE يرمز إلى Target of Evaluation (النظام أو المنتج المستهدف بالتقييم الأمني)."
+            },
+            {
+                id: 32,
+                type: 'mcq',
+                q: "A hacker deletes logs after gaining unauthorized access. This action is part of:",
+                options: ["Enumeration", "Exploitation", "Covering tracks", "Footprinting"],
+                ans: 2,
+                exp: "مسح سجلات النظام (Logs) بعد الاختراق يتم لإخفاء الأدلة وهو جزء من مرحلة إخفاء الآثار (Covering tracks)."
+            },
+            {
+                id: 33,
+                type: 'mcq',
+                q: "Which of the following is NOT a cryptographic goal?",
+                options: ["Authentication", "Integrity", "Confidentiality", "Performance"],
+                ans: 3,
+                exp: "الأداء (Performance) ليس هدفاً أمنياً للتشفير، بل إن التشفير غالباً ما يستهلك جزءاً من الأداء مقابل توفير السرية والسلامة والمصادقة."
+            },
+            {
+                id: 34,
+                type: 'mcq',
+                q: "Authentication in cryptography is commonly achieved using:",
+                options: ["Symmetric Cryptography", "Asymmetric Cryptography", "Hashing", "Compression"],
+                ans: 1,
+                exp: "المصادقة (Authentication) في التشفير تتحقق بشكل شائع عبر التشفير غير المتماثل (Asymmetric Cryptography)."
+            },
+            {
+                id: 35,
+                type: 'mcq',
+                q: "Which of the following cryptography techniques assures the identity of the encrypting party?",
+                options: ["Symmetric Cryptography", "Asymmetric Cryptography", "Digital signatures", "None"],
+                ans: 2,
+                exp: "التوقيعات الرقمية (Digital signatures) تُستخدم لتأكيد وضمان هوية الطرف المرسل/المُشفِّر."
+            },
+            {
+                id: 36,
+                type: 'mcq',
+                q: "Which of the following is a drawback of symmetric cryptography?",
+                options: ["Lack of authentication", "Lack of integrity", "Lack of non-repudiation", "Lack of simplicity"],
+                ans: 2,
+                exp: "من أبرز عيوب التشفير المتماثل هو افتقاره لخاصية عدم الإنكار (Lack of non-repudiation) نظراً لمشاركة نفس المفتاح."
+            },
+            {
+                id: 37,
+                type: 'mcq',
+                q: "Which attack attempts all possible combinations to crack an encryption?",
+                options: ["Brute Force attack", "SQL injection", "DDOS attacks", "None"],
+                ans: 0,
+                exp: "هجوم القوة الغاشمة (Brute Force attack) يقوم بتجربة جميع الاحتمالات والمفاتيح الممكنة لكسر التشفير أو كلمة المرور."
+            },
+            {
+                id: 38,
+                type: 'mcq',
+                q: "Which of the following best describes threat modeling?",
+                options: [
+                    "Detecting attacks after they occur",
+                    "Identifying and analyzing security threats before exploitation",
+                    "Encrypting system data",
+                    "Monitoring network traffic"
+                ],
+                ans: 1,
+                exp: "نمذجة التهديدات (Threat modeling) هي عملية استباقية لتحديد وتحليل التهديدات الأمنية قبل استغلالها."
+            },
+            {
+                id: 39,
+                type: 'mcq',
+                q: "In the STRIDE framework, which threat category involves pretending to be another user?",
+                options: ["Tampering", "Repudiation", "Spoofing", "Elevation of privilege"],
+                ans: 2,
+                exp: "في نموذج STRIDE، انتحال الشخصية أو التظاهر بأنك مستخدم آخر يُسمى Spoofing (حرف S)."
+            },
+            {
+                id: 40,
+                type: 'mcq',
+                q: "In threat modelling, the attack surface refers to:",
+                options: [
+                    "All possible points where an attacker can interact with a system",
+                    "The number of encryption keys in a system",
+                    "The firewall configuration of a system",
+                    "The number of users accessing the system"
+                ],
+                ans: 0,
+                exp: "سطح الهجوم (Attack surface) يشير إلى مجموع النقاط أو المداخل الممكنة التي يمكن للمهاجم التفاعل مع النظام أو اختراقه من خلالها."
+            },
+
+            // Part 2: True or False (41-60)
+            {
+                id: 41,
+                type: 'tf',
+                q: "Ethical hackers are employed either through contracts or direct employment to test the security of an organization.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ يتم توظيف المختبرين الأخلاقيين إما بعقود خارجية أو بتوظيف مباشر لاختبار أمان المؤسسة بإذن رسمي."
+            },
+            {
+                id: 42,
+                type: 'tf',
+                q: "In public key cryptography, there is only one key for each holder, and it is public for people within the same organization.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ في تشفير المفتاح العام يمتلك كل شخص زوجاً من المفاتيح (مفتاح عام ومفتاح خاص) وليس مفتاحاً واحداً فقط."
+            },
+            {
+                id: 43,
+                type: 'tf',
+                q: "Trojan relies on trickery and deception to be activated.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ حصان طروادة (Trojan) يتخفى في صورة برنامج شرعي ويعتمد على خداع المستخدم لتشغيله."
+            },
+            {
+                id: 44,
+                type: 'tf',
+                q: "A simple search on Google could provide a very helpful source of information about targeted victims for hacking.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ البحث البسيط على جوجل (Google Dorking / OSINT) يوفر معلومات مهمة جداً في مرحلة الاستطلاع."
+            },
+            {
+                id: 45,
+                type: 'tf',
+                q: "Encryption keys work on the same concept as physical keys work in the real world.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ مفاتيح التشفير تعمل بنفس المفهوم الأساسي للمفاتيح الحقيقية (قفل وفتح الوصول للمعلومات)."
+            },
+            {
+                id: 46,
+                type: 'tf',
+                q: "In the initial phase of the attack, all gathered information is known for sure how it will be used later in the attack.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ في مرحلة جمع المعلومات الأولية يتم جمع كل ما يمكن العثور عليه دون معرفة مؤكدة بكيفية استخدام كل معلومة لاحقاً."
+            },
+            {
+                id: 47,
+                type: 'tf',
+                q: "Leaking your company's data to the outside network without prior permission of senior authority is a crime.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ تسريب بيانات الشركة إلى الخارج دون تصريح مسبق يُعد جريمة وخرقاً أمنياً وقانونياً."
+            },
+            {
+                id: 48,
+                type: 'tf',
+                q: "API stands for Application Programming Interface.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ API هي اختصار Application Programming Interface (واجهة برمجة التطبيقات)."
+            },
+            {
+                id: 49,
+                type: 'tf',
+                q: "Ethics are a structure of standards and practices that influence how people lead their lives.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ الأخلاقيات هي منظومة المعايير والممارسات التي توجه سلوك الأفراد وكيفية إدارتهم لحياتهم."
+            },
+            {
+                id: 50,
+                type: 'tf',
+                q: "Anonymity is a way of keeping a user's identity masked through various applications.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ إخفاء الهوية (Anonymity) يعني إبقاء هوية المستخدم مخفية عبر تطبيقات وتقنيات مختلفة."
+            },
+            {
+                id: 51,
+                type: 'tf',
+                q: "Threat modeling focuses on anticipating attacks rather than reacting to incidents.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ نمذجة التهديدات تركز على توقع الهجمات مبكراً بدلاً من مجرد رد الفعل بعد وقوع الحوادث."
+            },
+            {
+                id: 52,
+                type: 'tf',
+                q: "A trust boundary is a point where the level of privilege or trust changes in a system.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ حدود الثقة (Trust boundary) هي النقطة التي يتغير عندها مستوى الصلاحيات أو الثقة داخل النظام."
+            },
+            {
+                id: 53,
+                type: 'tf',
+                q: "Information disclosure in STRIDE refers to unauthorized exposure of sensitive data.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ الكشف عن المعلومات (Information disclosure) في STRIDE يعني انكشاف البيانات الحساسة لجهات غير مصرح لها."
+            },
+            {
+                id: 54,
+                type: 'tf',
+                q: "Elevation of privilege occurs when a user gains higher permissions than intended.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ رفع الصلاحيات (Elevation of privilege) يحدث عندما يحصل مستخدم على صلاحيات أعلى مما هو مسموح له."
+            },
+            {
+                id: 55,
+                type: 'tf',
+                q: "Denial of Service attacks primarily target system confidentiality.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ هجمات حجب الخدمة (DoS) تستهدف في المقام الأول التوافرية (Availability) وليس السرية (Confidentiality)."
+            },
+            {
+                id: 56,
+                type: 'tf',
+                q: "A vulnerability is an attack that actively targets a system or resource.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ الثغرة (Vulnerability) هي نقطة ضعف كامنة في النظام، وليست هجوماً نشطاً بحد ذاتها."
+            },
+            {
+                id: 57,
+                type: 'tf',
+                q: "In asymmetric cryptography, the same key is used for both encryption and decryption.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ في التشفير غير المتماثل يتم استخدام مفتاحين مختلفين (عام وخاص)، أما استخدام نفس المفتاح فهو في التشفير المتماثل."
+            },
+            {
+                id: 58,
+                type: 'tf',
+                q: "Hashing produces an output that can easily be reversed to obtain the original message.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ دالة التجزئة (Hashing) هي دالة ذات اتجاه واحد (One-way function) ولا يمكن عكسها لاسترجاع النص الأصلي."
+            },
+            {
+                id: 59,
+                type: 'tf',
+                q: "Confidentiality ensures that information is protected from unauthorized disclosure.",
+                options: ["True", "False"],
+                ans: 0,
+                exp: "صحيح؛ السرية (Confidentiality) تضمن حماية المعلومات من الكشف أو الاطلاع غير المصرح به."
+            },
+            {
+                id: 60,
+                type: 'tf',
+                q: "Gray-hat hackers always operate strictly within the law and with permission.",
+                options: ["True", "False"],
+                ans: 1,
+                exp: "خطأ؛ قراصنة القبعة الرمادية (Gray-hat) غالباً ما يخترقون الأنظمة دون إذن مسبق (مما يخالف القانون)، أما من يعمل دائماً بإذن وضمن القانون فهم أصحاب القبعة البيضاء (White-hat)."
+            }
+        ];
+
+        // State
+        let userAnswers = {}; // { questionId: selectedOptionIndex }
+        let mode = 'practice'; // 'practice' | 'exam'
+        let examSubmitted = false;
+        let view = 'single'; // 'single' | 'list'
+        let currentFilter = 'all'; // 'all' | 'mcq' | 'tf' | 'wrong'
+        let currentQuestionIndex = 0; // Index within filteredQuestions
+
+        const letters = ['A', 'B', 'C', 'D'];
+
+        function getFilteredQuestions() {
+            return questionsData.filter(q => {
+                if (currentFilter === 'mcq') return q.type === 'mcq';
+                if (currentFilter === 'tf') return q.type === 'tf';
+                if (currentFilter === 'wrong') {
+                    return userAnswers[q.id] !== undefined && userAnswers[q.id] !== q.ans;
+                }
+                return true;
+            });
+        }
+
+        function setMode(newMode) {
+            mode = newMode;
+            examSubmitted = false;
+            document.getElementById('modePracticeBtn').className = mode === 'practice'
+                ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition'
+                : 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+            document.getElementById('modeExamBtn').className = mode === 'exam'
+                ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition'
+                : 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+            
+            document.getElementById('examSubmitContainer').classList.toggle('hidden', mode !== 'exam');
+            renderAll();
+        }
+
+        function setView(newView) {
+            view = newView;
+            document.getElementById('viewSingleBtn').className = view === 'single'
+                ? 'px-3 py-1.5 rounded-lg bg-slate-700 text-white transition'
+                : 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+            document.getElementById('viewListBtn').className = view === 'list'
+                ? 'px-3 py-1.5 rounded-lg bg-slate-700 text-white transition'
+                : 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+
+            document.getElementById('singleViewContainer').classList.toggle('hidden', view !== 'single');
+            document.getElementById('listViewContainer').classList.toggle('hidden', view !== 'list');
+            renderAll();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            currentQuestionIndex = 0;
+            ['all', 'mcq', 'tf', 'wrong'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = 'filter-btn bg-indigo-600 text-white py-1.5 px-2 rounded-lg transition';
+                } else {
+                    btn.className = `filter-btn bg-slate-800 ${f === 'wrong' ? 'text-rose-400' : 'text-slate-400'} hover:text-white py-1.5 px-2 rounded-lg transition`;
+                }
+            });
+            renderAll();
+        }
+
+        function selectOption(questionId, optionIndex) {
+            if (mode === 'exam' && examSubmitted) return;
+            userAnswers[questionId] = optionIndex;
+            renderAll();
+        }
+
+        function jumpToQuestion(indexInFiltered) {
+            currentQuestionIndex = indexInFiltered;
+            if (view === 'single') {
+                renderSingleView();
+                renderGrid();
+            } else {
+                const q = getFilteredQuestions()[indexInFiltered];
+                if (q) {
+                    const el = document.getElementById(`q-card-${q.id}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderSingleView();
+                renderGrid();
+            }
+        }
+
+        function nextQuestion() {
+            const filtered = getFilteredQuestions();
+            if (currentQuestionIndex < filtered.length - 1) {
+                currentQuestionIndex++;
+                renderSingleView();
+                renderGrid();
+            }
+        }
+
+        function updateStats() {
+            let correct = 0;
+            let wrong = 0;
+            let answered = Object.keys(userAnswers).length;
+
+            questionsData.forEach(q => {
+                if (userAnswers[q.id] !== undefined) {
+                    if (userAnswers[q.id] === q.ans) correct++;
+                    else wrong++;
+                }
+            });
+
+            const showScores = mode === 'practice' || examSubmitted;
+            document.getElementById('correctCount').textContent = showScores ? correct : '؟';
+            document.getElementById('wrongCount').textContent = showScores ? wrong : '؟';
+            document.getElementById('remainingCount').textContent = questionsData.length - answered;
+
+            const progress = (answered / questionsData.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('questionGrid');
+            const filtered = getFilteredQuestions();
+            document.getElementById('filterCountBadge').textContent = `${filtered.length} سؤال`;
+
+            grid.innerHTML = filtered.map((q, idx) => {
+                const userAns = userAnswers[q.id];
+                const isCurrent = view === 'single' && idx === currentQuestionIndex;
+                let bgClass = 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700';
+
+                if (userAns !== undefined) {
+                    if (mode === 'practice' || examSubmitted) {
+                        bgClass = userAns === q.ans
+                            ? 'bg-emerald-600 text-white border-emerald-500'
+                            : 'bg-rose-600 text-white border-rose-500';
+                    } else {
+                        bgClass = 'bg-indigo-600 text-white border-indigo-500';
+                    }
+                }
+
+                const ringClass = isCurrent ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900' : '';
+
+                return `
+                    <button onclick="jumpToQuestion(${idx})" class="h-9 rounded-lg border text-xs font-bold transition flex items-center justify-center ${bgClass} ${ringClass}">
+                        ${q.id}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function createQuestionCardHTML(q, idx, totalFiltered) {
+            const userAns = userAnswers[q.id];
+            const isAnswered = userAns !== undefined;
+            const showFeedback = (mode === 'practice' && isAnswered) || (mode === 'exam' && examSubmitted);
+
+            const badgeText = q.type === 'mcq' ? 'Multiple Choice' : 'True / False';
+            const badgeColor = q.type === 'mcq' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+
+            const optionsHTML = q.options.map((opt, optIdx) => {
+                let btnStyle = 'bg-slate-800/70 hover:bg-slate-800 border-slate-700 text-slate-200';
+                let badgeStyle = 'bg-slate-700 text-slate-300';
+                let icon = '';
+
+                if (showFeedback) {
+                    if (optIdx === q.ans) {
+                        btnStyle = 'bg-emerald-500/15 border-emerald-500 text-emerald-200 font-semibold';
+                        badgeStyle = 'bg-emerald-500 text-white';
+                        icon = '<span class="text-emerald-400 font-bold text-lg">✔</span>';
+                    } else if (userAns === optIdx && userAns !== q.ans) {
+                        btnStyle = 'bg-rose-500/15 border-rose-500 text-rose-200';
+                        badgeStyle = 'bg-rose-500 text-white';
+                        icon = '<span class="text-rose-400 font-bold text-lg">✖</span>';
+                    }
+                } else if (userAns === optIdx) {
+                    btnStyle = 'bg-indigo-600/20 border-indigo-500 text-white font-semibold';
+                    badgeStyle = 'bg-indigo-600 text-white';
+                }
+
+                return `
+                    <button onclick="selectOption(${q.id}, ${optIdx})" 
+                            class="option-btn w-full p-4 rounded-xl border text-left flex items-center justify-between gap-4 en-text ${btnStyle}">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${badgeStyle}">
+                                ${letters[optIdx]}
+                            </span>
+                            <span class="text-base leading-relaxed">${opt}</span>
+                        </div>
+                        ${icon}
+                    </button>
+                `;
+            }).join('');
+
+            let feedbackHTML = '';
+            if (showFeedback) {
+                const isCorrect = userAns === q.ans;
+                const statusBanner = userAns === undefined
+                    ? `<div class="text-amber-400 font-bold mb-1">⚠️ لم تقم بالإجابة على هذا السؤال — الإجابة الصحيحة هي (${letters[q.ans]})</div>`
+                    : isCorrect
+                        ? `<div class="text-emerald-400 font-bold mb-1">🎉 إجابة صحيحة! أحسنت.</div>`
+                        : `<div class="text-rose-400 font-bold mb-1">❌ إجابة خاطئة — الإجابة الصحيحة هي (${letters[q.ans]}: ${q.options[q.ans]})</div>`;
+
+                feedbackHTML = `
+                    <div class="mt-5 p-4 rounded-xl bg-slate-800/90 border border-slate-700 text-sm leading-relaxed">
+                        ${statusBanner}
+                        <p class="text-slate-300 mt-1"><span class="text-indigo-400 font-bold">💡 الشرح:</span> ${q.exp}</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div id="q-card-${q.id}" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <!-- Question Header -->
+                    <div class="flex items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg text-sm">
+                                Question #${q.id}
+                            </span>
+                            <span class="text-xs px-2.5 py-1 rounded-lg border font-semibold ${badgeColor}">
+                                ${badgeText}
+                            </span>
+                        </div>
+                        <span class="text-xs text-slate-400">
+                            ${idx + 1} من ${totalFiltered}
+                        </span>
+                    </div>
+
+                    <!-- Question Text -->
+                    <h3 class="en-text text-lg md:text-xl font-semibold text-white mb-6 leading-relaxed">
+                        ${q.id}. ${q.q}
+                    </h3>
+
+                    <!-- Options -->
+                    <div class="space-y-3">
+                        ${optionsHTML}
+                    </div>
+
+                    <!-- Explanation -->
+                    ${feedbackHTML}
+                </div>
+            `;
+        }
+
+        function renderSingleView() {
+            const container = document.getElementById('singleViewContainer');
+            const filtered = getFilteredQuestions();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
+                        <div class="text-5xl">👏</div>
+                        <h3 class="text-xl font-bold text-white">لا توجد أسئلة في هذا التصنيف حالياً!</h3>
+                        <p class="text-slate-400 text-sm">إذا كنت في تبويب "أخطائي"، فهذا يعني أنه لا توجد لديك أي إجابات خاطئة حتى الآن.</p>
+                        <button onclick="setFilter('all')" class="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition">
+                            عرض جميع الأسئلة
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentQuestionIndex >= filtered.length) {
+                currentQuestionIndex = filtered.length - 1;
+            }
+
+            const q = filtered[currentQuestionIndex];
+            const cardHTML = createQuestionCardHTML(q, currentQuestionIndex, filtered.length);
+
+            const navHTML = `
+                <div class="flex items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <button onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''} 
+                            class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition flex items-center gap-2">
+                        <span>→</span> السؤال السابق
+                    </button>
+
+                    <span class="text-sm text-slate-400 font-semibold">
+                        سؤال ${q.id}
+                    </span>
+
+                    <button onclick="nextQuestion()" ${currentQuestionIndex === filtered.length - 1 ? 'disabled' : ''} 
+                            class="px-5 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition flex items-center gap-2">
+                        السؤال التالي <span>←</span>
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = cardHTML + navHTML;
+        }
+
+        function renderListView() {
+            const container = document.getElementById('listViewContainer');
+            const filtered = getFilteredQuestions();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
+                        <div class="text-5xl">👏</div>
+                        <h3 class="text-xl font-bold text-white">لا توجد أسئلة في هذا التصنيف!</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((q, idx) => createQuestionCardHTML(q, idx, filtered.length)).join('');
+        }
+
+        function finishExam() {
+            examSubmitted = true;
+            renderAll();
+
+            let correct = 0;
+            questionsData.forEach(q => {
+                if (userAnswers[q.id] === q.ans) correct++;
+            });
+
+            const wrong = questionsData.length - correct;
+            const percent = Math.round((correct / questionsData.length) * 100);
+
+            document.getElementById('modalPercent').textContent = `${percent}%`;
+            document.getElementById('modalCorrect').textContent = correct;
+            document.getElementById('modalWrong').textContent = wrong;
+
+            const emoji = percent >= 85 ? '🏆' : percent >= 60 ? '👍' : '📚';
+            const msg = percent >= 85
+                ? 'مستوى ممتاز جداً! أنت مستعد تماماً للامتحان.'
+                : percent >= 60
+                    ? 'جيد! يمكنك مراجعة الأخطاء للوصول للدرجة النهائية.'
+                    : 'تحتاج إلى مراجعة الشروحات والمحاولة مرة أخرى لتثبيت المعلومات.';
+
+            document.getElementById('modalEmoji').textContent = emoji;
+            document.getElementById('modalMessage').textContent = msg;
+            document.getElementById('resultModal').classList.remove('hidden');
+        }
+
+        function closeModalAndReview() {
+            document.getElementById('resultModal').classList.add('hidden');
+            setView('list');
+        }
+
+        function closeModalAndReset() {
+            document.getElementById('resultModal').classList.add('hidden');
+            resetQuiz();
+        }
+
+        function resetQuiz() {
+            userAnswers = {};
+            examSubmitted = false;
+            currentQuestionIndex = 0;
+            renderAll();
+        }
+
+        function renderAll() {
+            updateStats();
+            renderGrid();
+            if (view === 'single') {
+                renderSingleView();
+            } else {
+                renderListView();
+            }
+        }
+
+        // Initial render
+        renderAll();
+    </script>
+</body>
+</html>
